@@ -17,7 +17,7 @@ void setup() {
 void loop() {
 
     sensorValue = analogRead(sensorPin);
-
+    Serial.println(sensorValue);
   if(sensorValue < 200){
     offTime += 1;
     state = true;
