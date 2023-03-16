@@ -7,7 +7,7 @@ int thresh = (0.1*4096)/3.3;// variable to store the value coming from the senso
 
 void setup() {
   // declare the ledPin as an OUTPUT:
-  Serial1.begin(9600);
+  Serial.begin(250000);
 }
 
 void loop() {
@@ -16,11 +16,11 @@ void loop() {
   
   if(sensorValue-mean>=thresh ||sensorValue-mean<= - thresh)
   {
-    Serial1.println("#### Gros bruit #####");
+    Serial.println("#### Gros bruit #####");
   }
   else
   {
-    Serial1.println("  ");
+    Serial.println("  ");
   }
    
 }

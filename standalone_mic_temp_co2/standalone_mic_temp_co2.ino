@@ -28,10 +28,20 @@ bool state2 = 0;
   int thresh = (0.1*4096)/3.3;// variable to store the value coming from the sensor
 
 //convertor
-  char char_output[10];
+  char buffer[12];
+  char buffer_out[12];
 
 //Display char
         char result[4]; 
+//clear every 20 loops
+int counter = 0;
+
+//last vars 
+float CO2_last;
+float ISO_last;
+float mic_last;
+float temp_last;
+float humi_last;
 
 
 
@@ -53,19 +63,8 @@ void setup() {
   //DHT init
 
     dht.begin();
-}
 
-char* convertor(float val){
-  Serial.println(val);
-   sprintf(char_output, "%.4f", val);
-   Serial.println(char_output);
-  return char_output;
-  }
-
-void loop() {
-
-
-  //Base display 
+      //Base display 
 
 
       DisplayString(0,2,"Humidity  :");   
@@ -81,23 +80,46 @@ void loop() {
       DisplayString(100,5, " ppm"); 
 
       DisplayString(0, 6, "Microphone:");
-      DisplayString(100,6, " vdif"); 
+      DisplayString(100,6, " mVdif"); 
+}
+
+char* convertor(float val){
+  itoa(int(val), buffer, 10);
+  int dec = (val - (int)val) * 100;
+  itoa(abs(val), buffer_out, 10);
+  itoa(abs(dec), buffer, 10);
+  Serial.println(buffer);
+  char point[2] = ".";
+  strcat(buffer_out, point);
+  strcat(buffer_out, buffer);
+  return buffer_out;
+  }
+
+
+
+void clean_and_display(){
+  float var_array[5]={humi_last, temp_last, ISO_last, CO2_last, mic_last};
+  for(int i =2; i<=6; i++){
+    DisplayString(68,i, "      "); 
+    DisplayString(68,i, convertor(var_array[i-2])); 
+  }
+
+  
+}
+
+void loop() {
+
+
+
   
 
   //DHT READ by DHT lib
   // put your main code here, to run repeatedly: 
-    float h = dht.readHumidity();
+    float humi_last = dht.readHumidity();
   // Read temperature as Celsius (the default)
-  float t = dht.readTemperature();
+  float temp_last = dht.readTemperature();
 
-  //Display result of DHT Read
 
-      
-      float potate = 266.7;
-      DisplayString(70, 2, convertor(potate));
-      //DisplayString(56,2, convertor(h) ); 
-      //DisplayString(0,7, convertor(3));
-      //DisplayString(56,3, result ); 
 
   
 //CO2 ISO PWN CODE
@@ -114,50 +136,43 @@ void loop() {
     onTime += 1;
   }
 
+  //float val =   sensorValue = analogRead(sensorPin);
+  //DisplayString(68,4, convertor(val)); 
+
   if (switchTime == 1 && state2){
 
     ratioCo2 = (onTime*100/(offTime+onTime));
 
     if(ratioCo2 <= 50){
-
-      dtostrf((ratioCo2-5)*25, 3, 1, result);
-
-
-      //DisplayString(56,4, convertor((ratioCo2-5)*25)); 
-
-
-        
-  
+        //ISO
+         ISO_last = (ratioCo2-5)*25;
+ 
       }
 
     else{
-
-      dtostrf(((ratioCo2)-55)*40 +400, 3, 1, result);
-
-
-      //DisplayString(56,5, convertor(((ratioCo2)-55)*40 +400) ); 
-
-
-
+      //CO2
+         CO2_last = ((ratioCo2)-55)*40 +400;
       }
+      
+      
       
     state2 = false;
     onTime = 0;
     offTime = 0;
     switchTime = 0;     
   } 
+
+  
   //Mic
   
-  sensorValue = analogRead(sensorPin);    
-  if(sensorValue-mean>=thresh ||sensorValue-mean<= - thresh)
-  {
-    Serial1.println("#### Gros bruit #####");
-    //DisplayString()
-  }
-  else
-  {
-    Serial1.println("  ");
-  }
+  sensorValueMic = analogRead(sensorPinMic);    
+  mic_last = ((sensorValueMic*3.3/4096)-1.62)*1000;
 
+    
+  if(counter>= 5000){
+    clean_and_display();
+  counter=0;
+  }else{counter++;}
+  
   
 }
