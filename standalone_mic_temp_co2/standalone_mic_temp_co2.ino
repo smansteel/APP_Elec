@@ -164,7 +164,8 @@ void loop() {
 
   
   //Mic
-  
+  //checkout https://electronics.stackexchange.com/questions/211426/calculating-spl-from-voltage-output-of-a-microphone-with-max4466-amplifier
+  //for detailed conversion to db
   sensorValueMic = analogRead(sensorPinMic);    
   mic_last = ((sensorValueMic*3.3/4096)-1.62)*1000;
 
