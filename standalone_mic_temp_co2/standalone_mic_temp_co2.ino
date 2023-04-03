@@ -29,8 +29,9 @@ bool state2 = 0;
 
   //bruit pénible
   float soundval =0;
-  int soundArray[100] = {0};
+  float soundArray[100] = {0};
   int meanSoundArray[100];
+  float avgSound=0;
   int kk;
   int K = 5;
 
@@ -95,7 +96,7 @@ char* convertor(float val){
   int dec = (val - (int)val) * 100;
   itoa(abs(val), buffer_out, 10);
   itoa(abs(dec), buffer, 10);
-  Serial.println(buffer);
+  //Serial.println(buffer);
   char point[2] = ".";
   strcat(buffer_out, point);
   strcat(buffer_out, buffer);
@@ -174,7 +175,9 @@ void loop() {
   //checkout https://electronics.stackexchange.com/questions/211426/calculating-spl-from-voltage-output-of-a-microphone-with-max4466-amplifier
   //for detailed conversion to db
   sensorValueMic = analogRead(sensorPinMic);    
-  soundArray[counter/50] = sensorValueMic/4096;
+  soundArray[counter%50] = (sensorValueMic-2048.0)/4096;
+  //Serial.println( (sensorValueMic-2048.0)/4096);
+    
   //mic_last = ((sensorValueMic*3.3/4096)-1.62)*1000;
 
   
@@ -185,23 +188,27 @@ void loop() {
   if(counter>= 5000){
   
   for (int i = K; i < counter/50-K; i++) {
-      int x[2*K+1];
+      float x[2*K+1];
       for (int j = 0; j <= 2*K; j++) {
         x[j] = soundArray[i-K+j];
+       Serial.println(x[j]);
+       Serial.println(counter);
       }
       float sum = 0.0;
       for (int j = 0; j <= 2*K; j++) {
         sum += x[j]*x[j];
       }
   
-  meanSoundArray[counter/50] = sum / (2*K+1);
+  meanSoundArray[i] = sum / (2*K+1);
   }
 
-mic_last =0;
+
   for(int i = 0; i<counter/50; i++){
-    mic_last += meanSoundArray[counter]/counter/50;
+    avgSound += meanSoundArray[i]/(counter/50);
+
   }
 
+  mic_last = avgSound;
 
     
     clean_and_display();
