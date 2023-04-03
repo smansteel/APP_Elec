@@ -27,6 +27,13 @@ bool state2 = 0;
   int mean = (1.62*4096)/3.3;
   int thresh = (0.1*4096)/3.3;// variable to store the value coming from the sensor
 
+  //bruit pénible
+  float soundval =0;
+  int soundArray[100] = {0};
+  int meanSoundArray[100];
+  int kk;
+  int K = 5;
+
 //convertor
   char buffer[12];
   char buffer_out[12];
@@ -167,10 +174,36 @@ void loop() {
   //checkout https://electronics.stackexchange.com/questions/211426/calculating-spl-from-voltage-output-of-a-microphone-with-max4466-amplifier
   //for detailed conversion to db
   sensorValueMic = analogRead(sensorPinMic);    
-  mic_last = ((sensorValueMic*3.3/4096)-1.62)*1000;
+  soundArray[counter/50] = sensorValueMic/4096;
+  //mic_last = ((sensorValueMic*3.3/4096)-1.62)*1000;
+
+  
+  //mean calculation
+  
 
     
   if(counter>= 5000){
+  
+  for (int i = K; i < counter/50-K; i++) {
+      int x[2*K+1];
+      for (int j = 0; j <= 2*K; j++) {
+        x[j] = soundArray[i-K+j];
+      }
+      float sum = 0.0;
+      for (int j = 0; j <= 2*K; j++) {
+        sum += x[j]*x[j];
+      }
+  
+  meanSoundArray[counter/50] = sum / (2*K+1);
+  }
+
+mic_last =0;
+  for(int i = 0; i<counter/50; i++){
+    mic_last += meanSoundArray[counter]/counter/50;
+  }
+
+
+    
     clean_and_display();
   counter=0;
   }else{counter++;}
