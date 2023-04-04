@@ -214,9 +214,6 @@ avgSound=0;
   }
 
   mic_last = avgSound*5000;
-  Serial.println(mic_last);
-  //mic_last += 1;
-
     
     clean_and_display();
   counter=0;
