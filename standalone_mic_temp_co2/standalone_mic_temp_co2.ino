@@ -88,7 +88,7 @@ void setup() {
       DisplayString(100,5, " ppm"); 
 
       DisplayString(0, 6, "Microphone:");
-      DisplayString(100,6, " mVdif"); 
+      DisplayString(100,6, "   W"); 
 }
 
 char* convertor(float val){
@@ -109,6 +109,10 @@ void clean_and_display(){
   float var_array[5]={humi_last, temp_last, ISO_last, CO2_last, mic_last};
   for(int i =2; i<=6; i++){
     DisplayString(68,i, "      "); 
+    if(i == 6)
+  {
+    DisplayString(68,i, "        "); 
+  }
     DisplayString(68,i, convertor(var_array[i-2])); 
   }
 
