@@ -30,8 +30,8 @@ bool state2 = 0;
   //bruit pénible
   float soundval =0;
   float soundArray[100] = {0};
-  int meanSoundArray[100];
-  float avgSound=0;
+  double meanSoundArray[100];
+  double avgSound=0;
   int kk;
   int K = 5;
 
@@ -188,27 +188,34 @@ void loop() {
   if(counter>= 5000){
   
   for (int i = K; i < counter/50-K; i++) {
-      float x[2*K+1];
+      double x[2*K+1];
       for (int j = 0; j <= 2*K; j++) {
         x[j] = soundArray[i-K+j];
-       Serial.println(x[j]);
-       Serial.println(counter);
+
       }
-      float sum = 0.0;
+      double sum = 0.0;
       for (int j = 0; j <= 2*K; j++) {
+        //Serial.println(x[j]);
+        //Serial.println(x[j]*x[j]);
         sum += x[j]*x[j];
+
+
       }
   
   meanSoundArray[i] = sum / (2*K+1);
+  //Serial.println(sum);
+  //Serial.println((2*K+1));
   }
-
+avgSound=0;
 
   for(int i = 0; i<counter/50; i++){
     avgSound += meanSoundArray[i]/(counter/50);
 
   }
 
-  mic_last = avgSound;
+  mic_last = avgSound*5000;
+  Serial.println(mic_last);
+  //mic_last += 1;
 
     
     clean_and_display();
