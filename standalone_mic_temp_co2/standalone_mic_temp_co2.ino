@@ -1,7 +1,7 @@
 //DHT lib
 #include <DHT.h>
 #include <DHT_U.h>
-#define DHTPIN PE_2     // Digital pin connected to the DHT sensor
+#define DHTPIN 28     // Digital pin connected to the DHT sensor
 #define DHTTYPE DHT11   // DHT 11
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -55,7 +55,6 @@ float humi_last;
 
 void setup() {
   Serial.begin(250000);
-
 
 //screen init
   InitI2C();
@@ -127,9 +126,9 @@ void loop() {
 
   //DHT READ by DHT lib
   // put your main code here, to run repeatedly: 
-    float humi_last = dht.readHumidity();
+    humi_last = dht.readHumidity();
   // Read temperature as Celsius (the default)
-  float temp_last = dht.readTemperature();
+  temp_last = dht.readTemperature();
 
 
 
@@ -179,7 +178,10 @@ void loop() {
   //checkout https://electronics.stackexchange.com/questions/211426/calculating-spl-from-voltage-output-of-a-microphone-with-max4466-amplifier
   //for detailed conversion to db
   sensorValueMic = analogRead(sensorPinMic);    
-  soundArray[counter%50] = (sensorValueMic-2048.0)/4096;
+  if(counter%50 == 0){
+      soundArray[counter/50] = (sensorValueMic-2048.0)/4096;
+  }
+
   //Serial.println( (sensorValueMic-2048.0)/4096);
     
   //mic_last = ((sensorValueMic*3.3/4096)-1.62)*1000;
