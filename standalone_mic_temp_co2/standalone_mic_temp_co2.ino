@@ -87,7 +87,7 @@ void setup() {
       DisplayString(100,5, " ppm"); 
 
       DisplayString(0, 6, "Microphone:");
-      DisplayString(100,6, "   W"); 
+      DisplayString(100,6, " mW"); 
 }
 
 char* convertor(float val){
@@ -110,7 +110,7 @@ void clean_and_display(){
     DisplayString(68,i, "      "); 
     if(i == 6)
   {
-    DisplayString(68,i, "        "); 
+    DisplayString(68,i, "      "); 
   }
     DisplayString(68,i, convertor(var_array[i-2])); 
   }
@@ -219,7 +219,7 @@ avgSound=0;
 
   }
 
-  mic_last = avgSound*5000;
+  mic_last = avgSound*1000;
     
     clean_and_display();
   counter=0;
