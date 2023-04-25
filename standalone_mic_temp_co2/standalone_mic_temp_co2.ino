@@ -9,6 +9,19 @@ DHT dht(DHTPIN, DHTTYPE);
 #include "blank.h"
 #include "Iseplogo128.h"
 
+//Capteur cardiaque
+int LEDPin = 12;
+int sensorCardiacPin = 26;
+int ratioTime =0;
+float onTime_c = 0;  
+float offTime_c = 0; 
+int switchTime_c = 0;
+bool state_c = 0;
+bool state2_c = 0;
+
+
+
+
 
 //CO2
 int sensorPin = 23;    // select the input pin for the potentiometer
@@ -50,6 +63,7 @@ float ISO_last;
 float mic_last;
 float temp_last;
 float humi_last;
+float cardiac_last;
 
 
 
@@ -66,6 +80,8 @@ void setup() {
 
   Display(blank);  
   DisplayString(35,0,"AirQ Sensor");   
+
+  digitalWrite(HIGH, LEDPin); 
 
   //DHT init
 
@@ -122,6 +138,7 @@ void loop() {
 
 
 
+
   
 
   //DHT READ by DHT lib
@@ -135,6 +152,7 @@ void loop() {
   
 //CO2 ISO PWN CODE
   sensorValue = analogRead(sensorPin);
+    
 
   if(sensorValue < 200){
     offTime += 1;
@@ -165,7 +183,7 @@ void loop() {
          CO2_last = ((ratioCo2)-55)*40 +400;
       }
       
-      
+
       
     state2 = false;
     onTime = 0;
@@ -178,6 +196,7 @@ void loop() {
   //checkout https://electronics.stackexchange.com/questions/211426/calculating-spl-from-voltage-output-of-a-microphone-with-max4466-amplifier
   //for detailed conversion to db
   sensorValueMic = analogRead(sensorPinMic);    
+
   if(counter%50 == 0){
       soundArray[counter/50] = (sensorValueMic-2048.0)/4096;
   }
@@ -185,6 +204,43 @@ void loop() {
   //Serial.println( (sensorValueMic-2048.0)/4096);
     
   //mic_last = ((sensorValueMic*3.3/4096)-1.62)*1000;
+
+
+
+  //Cardiac Sensor
+  cardiac_last = analogRead(sensorCardiacPin);
+  //Serial.println(cardiac_last);
+
+Serial.println(cardiac_last);
+  
+
+  if(cardiac_last < 600){
+    offTime_c += 1;
+    state_c = true;
+  } else if (state_c){
+    state_c = false;
+    switchTime_c +=1;
+    state2_c = true;
+  }else if (cardiac_last > 1800){
+    onTime_c += 1;
+  }
+
+  if (switchTime == 1 && state2){
+
+    ratioTime = (onTime_c*100/(offTime_c+onTime_c));
+
+    Serial.println(ratioTime);
+      
+    state2_c = false;
+    onTime_c = 0;
+    offTime_c = 0;
+    switchTime_c = 0;     
+
+  } 
+
+
+
+  
 
   
   //mean calculation
