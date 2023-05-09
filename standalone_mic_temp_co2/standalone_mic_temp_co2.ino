@@ -11,15 +11,13 @@ DHT dht(DHTPIN, DHTTYPE);
 
 //Capteur cardiaque
 int LEDPin = 12;
-int sensorCardiacPin = 26;
-int ratioTime =0;
-float onTime_c = 0;  
-float offTime_c = 0; 
-int switchTime_c = 0;
-bool state_c = 0;
-bool state2_c = 0;
-
-
+int sensorCardiacPin = 24;
+int cardiacValue=0;
+float onTimeCardiac = 0;  
+float offTimeCardiac = 0; 
+int switchTimeCardiac = 0;
+bool stateCardiac = 0;
+bool state2Cardiac = 0;
 
 
 
@@ -80,8 +78,8 @@ void setup() {
 
   Display(blank);  
   DisplayString(35,0,"AirQ Sensor");   
-
-  digitalWrite(HIGH, LEDPin); 
+  pinMode(LEDPin, OUTPUT);
+  digitalWrite(LEDPin, LOW); 
 
   //DHT init
 
@@ -104,6 +102,8 @@ void setup() {
 
       DisplayString(0, 6, "Microphone:");
       DisplayString(100,6, " mW"); 
+
+      DisplayString(0, 7, "BPM du porteur:");
 }
 
 char* convertor(float val){
@@ -118,17 +118,32 @@ char* convertor(float val){
   return buffer_out;
   }
 
+char* convertor_int(float val){
+  itoa(int(val), buffer, 10);
+  itoa(abs(val), buffer_out, 10);
+  return buffer_out;
+  }
 
 
 void clean_and_display(){
-  float var_array[5]={humi_last, temp_last, ISO_last, CO2_last, mic_last};
-  for(int i =2; i<=6; i++){
+  float var_array[6]={humi_last, temp_last, ISO_last, CO2_last, mic_last, cardiac_last};
+  for(int i =2; i<=7; i++){
+    if( i==7){
+      DisplayString(96,i, "      "); 
+    }else{
     DisplayString(68,i, "      "); 
     if(i == 6)
   {
     DisplayString(68,i, "      "); 
   }
+    }
+  if (i ==7){
+        DisplayString(96,i, convertor_int(var_array[i-2])); 
+  }else{
+    
+ 
     DisplayString(68,i, convertor(var_array[i-2])); 
+     }
   }
 
   
@@ -208,36 +223,16 @@ void loop() {
 
 
   //Cardiac Sensor
-  cardiac_last = analogRead(sensorCardiacPin);
+  cardiacValue = analogRead(sensorCardiacPin);
+  cardiac_last=cardiacValue;
   //Serial.println(cardiac_last);
-
+if(counter %200 ==0){
 Serial.println(cardiac_last);
+
+    if() }
+
+
   
-
-  if(cardiac_last < 600){
-    offTime_c += 1;
-    state_c = true;
-  } else if (state_c){
-    state_c = false;
-    switchTime_c +=1;
-    state2_c = true;
-  }else if (cardiac_last > 1800){
-    onTime_c += 1;
-  }
-
-  if (switchTime == 1 && state2){
-
-    ratioTime = (onTime_c*100/(offTime_c+onTime_c));
-
-    Serial.println(ratioTime);
-      
-    state2_c = false;
-    onTime_c = 0;
-    offTime_c = 0;
-    switchTime_c = 0;     
-
-  } 
-
 
 
   
