@@ -18,6 +18,14 @@ float offTimeCardiac = 0;
 int switchTimeCardiac = 0;
 bool stateCardiac = 0;
 bool state2Cardiac = 0;
+float ratioCardiac = 0;
+int counterCardiac = 0;
+int histCardiac[100] = {};
+int cardiacTime = 0;
+int cardiacTemp = 0;
+bool isLastCycleTrue = false;
+int meanCardiac[10] = {};
+int cardiacMeanCounter = 0;
 
 
 
@@ -66,6 +74,7 @@ float cardiac_last;
 
 
 void setup() {
+  cardiacTime = millis();
   Serial.begin(250000);
 
 //screen init
@@ -223,21 +232,50 @@ void loop() {
 
 
   //Cardiac Sensor
-  cardiacValue = analogRead(sensorCardiacPin);
-  cardiac_last=cardiacValue;
-  //Serial.println(cardiac_last);
-if(counter %200 ==0){
-Serial.println(cardiac_last);
 
-    if() }
+    if(counter %100 ==0){
+        cardiacValue = analogRead(sensorCardiacPin);
+         Serial.print("cardiacValue :");
+          Serial.print(cardiacValue);
+          Serial.print(",");
+          Serial.print("cardiacTemp:");
+          Serial.println(cardiacTemp*1000);
+
+        histCardiac[counter%100] = cardiacValue ;
+        
+     if (millis() >= (cardiacTime +1000))
+       {
+        meanCardiac[cardiacMeanCounter] = cardiacTemp;
+        
+        cardiac_last = (meanCardiac[0] + meanCardiac[1]+meanCardiac[2] +meanCardiac[3] +meanCardiac[4]+meanCardiac[5] +meanCardiac[6] +meanCardiac[7]+meanCardiac[8]+meanCardiac[9])*6;
+        cardiacTemp = 0;
+        //cardiac_last =cardiacTemp;
+        cardiacTime = millis();
+        isLastCycleTrue = false;
+        cardiacMeanCounter +=1;
+        if (cardiacMeanCounter >=10){
+          cardiacMeanCounter = 0;
+        }
+       }
+     
+     if ((histCardiac[counter%100] - histCardiac[(counter%100) +1]> 1500)&& (!isLastCycleTrue))
+       {
+        Serial.println(cardiacTemp);
+        isLastCycleTrue = true;
+        cardiacTemp+=1;
+
+       }
+     else if( (histCardiac[counter%100] - histCardiac[(counter%100) +1]< 1500))
+       {
+        isLastCycleTrue = false;
+       }
+     
+ }
 
 
-  
+//Serial.println(ratioCardiac);
 
-
-  
-
-  
+ 
   //mean calculation
   
 
