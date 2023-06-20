@@ -1,20 +1,22 @@
-//DHT lib
-#include <DHT.h>
-#include <DHT_U.h>
-#define DHTPIN 28     // Digital pin connected to the DHT sensor
-#define DHTTYPE DHT11   // DHT 11
-DHT dht(DHTPIN, DHTTYPE);
+#include <Adafruit_Sensor.h>
 
-//Screen lib by ISEP
+// DHT lib
+
+#include "DHT.h"
+#include <DHT_U.h>
+
+DHT dht(PE_2, DHT11);
+
+// Screen lib by ISEP
 #include "blank.h"
 #include "Iseplogo128.h"
 
-//Capteur cardiaque
+// Capteur cardiaque
 int LEDPin = 12;
 int sensorCardiacPin = 24;
-int cardiacValue=0;
-float onTimeCardiac = 0;  
-float offTimeCardiac = 0; 
+int cardiacValue = 0;
+float onTimeCardiac = 0;
+float offTimeCardiac = 0;
 int switchTimeCardiac = 0;
 bool stateCardiac = 0;
 bool state2Cardiac = 0;
@@ -26,44 +28,43 @@ int cardiacTemp = 0;
 bool isLastCycleTrue = false;
 int meanCardiac[10] = {};
 int cardiacMeanCounter = 0;
+float meanCardiacFl = 0.0;
 
-
-
-//CO2
-int sensorPin = 23;    // select the input pin for the potentiometer
-int sensorValue = 0;  // variable to store the value coming from the sensor
-float onTime = 0;  
-float offTime = 0; 
+// CO2
+int sensorPin = 23;  // select the input pin for the potentiometer
+int sensorValue = 0; // variable to store the value coming from the sensor
+float onTime = 0;
+float offTime = 0;
 int switchTime = 0;
 float ratioCo2 = 0;
 float ratioGaz = 0;
 bool state = 0;
 bool state2 = 0;
 
-//mic
-  int sensorPinMic = 25;    // select the input pin for the potentiometer  
-  int sensorValueMic = 0; 
-  int mean = (1.62*4096)/3.3;
-  int thresh = (0.1*4096)/3.3;// variable to store the value coming from the sensor
+// mic
+int sensorPinMic = 25; // select the input pin for the potentiometer
+int sensorValueMic = 0;
+int mean = (1.62 * 4096) / 3.3;
+int thresh = (0.1 * 4096) / 3.3; // variable to store the value coming from the sensor
 
-  //bruit pénible
-  float soundval =0;
-  float soundArray[100] = {0};
-  double meanSoundArray[100];
-  double avgSound=0;
-  int kk;
-  int K = 5;
+// bruit pénible
+float soundval = 0;
+float soundArray[100] = {0};
+double meanSoundArray[100];
+double avgSound = 0;
+int kk;
+int K = 5;
 
-//convertor
-  char buffer[12];
-  char buffer_out[12];
+// convertor
+char buffer[12];
+char buffer_out[12];
 
-//Display char
-        char result[4]; 
-//clear every 20 loops
+// Display char
+char result[4];
+// clear every 20 loops
 int counter = 0;
 
-//last vars 
+// last vars
 float CO2_last;
 float ISO_last;
 float mic_last;
@@ -71,248 +72,318 @@ float temp_last;
 float humi_last;
 float cardiac_last;
 
+//SYNC
+
+String TRA = "1";
+String OBJ = "6969";
+String REQ = "1";
+String NUM = "1";
+String TYP ;
+String VAL ;
+String CHK = "00" ;
+String trame;
 
 
-void setup() {
+void setup()
+{
   cardiacTime = millis();
-  Serial.begin(250000);
-
-//screen init
+  Serial1.begin(9600);
+  // screen init
   InitI2C();
   InitScreen();
 
-  Display(motif);                           // affichage de l'image décrite dans le tabelau de donnée motif.h
+  Display(motif); // affichage de l'image décrite dans le tabelau de donnée motif.h
 
-  delay(00);
+  delay(2000);
 
-  Display(blank);  
-  DisplayString(35,0,"AirQ Sensor");   
+  Display(blank);
+  DisplayString(35, 0, "AirQ Sensor");
   pinMode(LEDPin, OUTPUT);
-  digitalWrite(LEDPin, LOW); 
+  digitalWrite(LEDPin, LOW);
 
-  //DHT init
+  // DHT init
 
-    dht.begin();
+  dht.begin();
 
-      //Base display 
+  Serial.begin(9600);
 
+  // Base display
 
-      DisplayString(0,2,"Humidity  :");   
-      DisplayString(100,2, " %"); 
-      
-      DisplayString(0,3,"Temperatur:");   
-      DisplayString(100,3, "°C"); 
+  DisplayString(0, 2, "Humidity  :");
+  DisplayString(100, 2, " %");
 
-      DisplayString(0,4,"Isobutylen:");   
-      DisplayString(100,4, " ppb"); 
+  DisplayString(0, 3, "Temperatur:");
+  DisplayString(100, 3, "°C");
 
-      DisplayString(0,5,"CarbonDiox:");   
-      DisplayString(100,5, " ppm"); 
+  DisplayString(0, 4, "Isobutylen:");
+  DisplayString(100, 4, " ppb");
 
-      DisplayString(0, 6, "Microphone:");
-      DisplayString(100,6, " mW"); 
+  DisplayString(0, 5, "CarbonDiox:");
+  DisplayString(100, 5, " ppm");
 
-      DisplayString(0, 7, "BPM du porteur:");
+  DisplayString(0, 6, "Microphone:");
+  DisplayString(100, 6, " mW");
+
+  DisplayString(0, 7, "BPM du porteur:");
 }
 
-char* convertor(float val){
+char *convertor(float val)
+{
   itoa(int(val), buffer, 10);
   int dec = (val - (int)val) * 100;
   itoa(abs(val), buffer_out, 10);
   itoa(abs(dec), buffer, 10);
-  //Serial.println(buffer);
+  // Serial.println(buffer);
   char point[2] = ".";
   strcat(buffer_out, point);
   strcat(buffer_out, buffer);
   return buffer_out;
-  }
+}
 
-char* convertor_int(float val){
+char *convertor_int(float val)
+{
   itoa(int(val), buffer, 10);
   itoa(abs(val), buffer_out, 10);
   return buffer_out;
-  }
-
-
-void clean_and_display(){
-  float var_array[6]={humi_last, temp_last, ISO_last, CO2_last, mic_last, cardiac_last};
-  for(int i =2; i<=7; i++){
-    if( i==7){
-      DisplayString(96,i, "      "); 
-    }else{
-    DisplayString(68,i, "      "); 
-    if(i == 6)
-  {
-    DisplayString(68,i, "      "); 
-  }
-    }
-  if (i ==7){
-        DisplayString(96,i, convertor_int(var_array[i-2])); 
-  }else{
-    
- 
-    DisplayString(68,i, convertor(var_array[i-2])); 
-     }
-  }
-
-  
 }
 
-void loop() {
+void clean_and_display()
+{
+  float var_array[6] = {humi_last, temp_last, ISO_last, CO2_last, mic_last, cardiac_last};
+  for (int i = 2; i <= 7; i++)
+  {
+    if (i == 7)
+    {
+      DisplayString(96, i, "      ");
+    }
+    else
+    {
+      DisplayString(68, i, "      ");
+      if (i == 6)
+      {
+        DisplayString(68, i, "      ");
+      }
+    }
+    if (i == 7)
+    {
+      DisplayString(96, i, convertor_int(var_array[i - 2]));
+    }
+    else
+    {
 
+      DisplayString(68, i, convertor(var_array[i - 2]));
+    }
+  }
 
+    for (int i = 0; i <= 5; i++)
+    {
+      TYP = "4";
+      switch (i)
+      {
+      case 1:
+        TYP = "3";
+        break;
+      case 2:
+        TYP = "1";
+        break;
+      case 3:
+        TYP = "2";
+        break;
+      case 4:
+        TYP = "5";
+      case 5:
+        TYP = "6";
+        break;
+      }
 
+        sendTrame(69,  "0001");
+      
+    }
+    
+}
+void sendTrame(int value, String TIM) {
 
-  
+ 
+  // CHK peut être calculé en sommant les valeurs ASCII de tous les caractères de la trame.
+  int chkSum = 0;
+  for (int i = 0; i < trame.length(); i++) {
+    chkSum += trame[i];
+  }
+  //CHK = String(chkSum, HEX);  // convertit la somme en une chaîne hexadécimale
+  CHK = "00";
+  trame += CHK;
 
-  //DHT READ by DHT lib
-  // put your main code here, to run repeatedly: 
-    humi_last = dht.readHumidity();
+  int minutes = millis() / 60000 ; 
+  int secondes = millis() % 60000 / 1000;
+    char hexValue[5]; // 2 characters for the hexadecimal representation and 1 for the null terminator
+  char hexMinutes[3];
+  char hexSecondes[3];
+    sprintf(hexMinutes, "%02X", minutes);
+  sprintf(hexSecondes, "%02X", secondes);
+  sprintf(hexValue, "%04X", value);
+
+    // Construction de la trame
+  String trame = TRA + OBJ + REQ + TYP + NUM + hexValue + TIM + "00";
+ 
+  // Envoi de la trame et attente de la réponse de la passerelle
+  Serial1.println(trame);  // envoie la trame
+  Serial.println(trame);
+}
+
+void loop()
+{
+
+  // DHT READ by DHT lib
+  //  put your main code here, to run repeatedly:
+  humi_last = dht.readHumidity();
   // Read temperature as Celsius (the default)
   temp_last = dht.readTemperature();
 
-
-
-  
-//CO2 ISO PWN CODE
+  // CO2 ISO PWN CODE
   sensorValue = analogRead(sensorPin);
-    
 
-  if(sensorValue < 200){
+  if (sensorValue < 200)
+  {
     offTime += 1;
     state = true;
-  } else if (state){
+  }
+  else if (state)
+  {
     state = false;
-    switchTime +=1;
+    switchTime += 1;
     state2 = true;
-  }else if (sensorValue > 3500){
+  }
+  else if (sensorValue > 3500)
+  {
     onTime += 1;
   }
 
-  //float val =   sensorValue = analogRead(sensorPin);
-  //DisplayString(68,4, convertor(val)); 
+  // float val =   sensorValue = analogRead(sensorPin);
+  // DisplayString(68,4, convertor(val));
 
-  if (switchTime == 1 && state2){
+  if (switchTime == 1 && state2)
+  {
 
-    ratioCo2 = (onTime*100/(offTime+onTime));
+    ratioCo2 = (onTime * 100 / (offTime + onTime));
 
-    if(ratioCo2 <= 50){
-        //ISO
-         ISO_last = (ratioCo2-5)*25;
- 
-      }
+    if (ratioCo2 <= 50)
+    {
+      // ISO
+      ISO_last = (ratioCo2 - 5) * 25;
+    }
 
-    else{
-      //CO2
-         CO2_last = ((ratioCo2)-55)*40 +400;
-      }
-      
+    else
+    {
+      // CO2
+      CO2_last = ((ratioCo2)-55) * 40 + 400;
+    }
 
-      
     state2 = false;
     onTime = 0;
     offTime = 0;
-    switchTime = 0;     
-  } 
-
-  
-  //Mic
-  //checkout https://electronics.stackexchange.com/questions/211426/calculating-spl-from-voltage-output-of-a-microphone-with-max4466-amplifier
-  //for detailed conversion to db
-  sensorValueMic = analogRead(sensorPinMic);    
-
-  if(counter%50 == 0){
-      soundArray[counter/50] = (sensorValueMic-2048.0)/4096;
+    switchTime = 0;
   }
 
-  //Serial.println( (sensorValueMic-2048.0)/4096);
-    
-  //mic_last = ((sensorValueMic*3.3/4096)-1.62)*1000;
+  // Mic
+  // checkout https://electronics.stackexchange.com/questions/211426/calculating-spl-from-voltage-output-of-a-microphone-with-max4466-amplifier
+  // for detailed conversion to db
+  sensorValueMic = analogRead(sensorPinMic);
 
+  if (counter % 50 == 0)
+  {
+    soundArray[counter / 50] = (sensorValueMic - 2048.0) / 4096;
+  }
 
+  // Serial.println( (sensorValueMic-2048.0)/4096);
 
-  //Cardiac Sensor
+  // mic_last = ((sensorValueMic*3.3/4096)-1.62)*1000;
 
-    if(counter %100 ==0){
-        cardiacValue = analogRead(sensorCardiacPin);
-         Serial.print("cardiacValue :");
-          Serial.print(cardiacValue);
-          Serial.print(",");
-          Serial.print("cardiacTemp:");
-          Serial.println(cardiacTemp*1000);
+  // Cardiac Sensor
 
-        histCardiac[counter%100] = cardiacValue ;
-        
-     if (millis() >= (cardiacTime +1000))
-       {
-        meanCardiac[cardiacMeanCounter] = cardiacTemp;
-        
-        cardiac_last = (meanCardiac[0] + meanCardiac[1]+meanCardiac[2] +meanCardiac[3] +meanCardiac[4]+meanCardiac[5] +meanCardiac[6] +meanCardiac[7]+meanCardiac[8]+meanCardiac[9])*6;
-        cardiacTemp = 0;
-        //cardiac_last =cardiacTemp;
-        cardiacTime = millis();
-        isLastCycleTrue = false;
-        cardiacMeanCounter +=1;
-        if (cardiacMeanCounter >=10){
-          cardiacMeanCounter = 0;
-        }
-       }
-     
-     if ((histCardiac[counter%100] - histCardiac[(counter%100) +1]> 1500)&& (!isLastCycleTrue))
-       {
-        Serial.println(cardiacTemp);
-        isLastCycleTrue = true;
-        cardiacTemp+=1;
+  if (counter % 100 == 0)
+  {
+    cardiacValue = analogRead(sensorCardiacPin);
+    // Serial.print("cardiacValue :");
+    // Serial.print(cardiacValue);
+    // Serial.print(",");
+    // Serial.print("mrancardiac :");
+    // Serial.print(meanCardiac[0]);
+    // Serial.print(",");
+    // Serial.print("cardiac_last :");
+    // Serial.println(cardiac_last);
 
-       }
-     else if( (histCardiac[counter%100] - histCardiac[(counter%100) +1]< 1500))
-       {
-        isLastCycleTrue = false;
-       }
-     
- }
+    histCardiac[counter % 100] = cardiacValue;
 
+    if ((histCardiac[counter % 100] - histCardiac[(counter % 100) + 1] > 1000) && (!isLastCycleTrue))
+    {
 
-//Serial.println(ratioCardiac);
+      meanCardiac[cardiacMeanCounter] = millis() - cardiacTemp;
 
- 
-  //mean calculation
-  
+      cardiacTemp = millis();
+      isLastCycleTrue = true;
 
-    
-  if(counter>= 5000){
-  
-  for (int i = K; i < counter/50-K; i++) {
-      double x[2*K+1];
-      for (int j = 0; j <= 2*K; j++) {
-        x[j] = soundArray[i-K+j];
+      meanCardiacFl = 0.0;
+      for (int i = 0; i < 10; i++)
+      {
+        meanCardiacFl += meanCardiac[i];
+      }
 
+      meanCardiacFl = meanCardiacFl / 10000;
+      cardiac_last = 60 / meanCardiacFl;
+
+      cardiacMeanCounter += 1;
+      if (cardiacMeanCounter >= 10)
+      {
+        cardiacMeanCounter = 0;
+      }
+    }
+
+    else if ((histCardiac[counter % 100] - histCardiac[(counter % 100) + 1] < 1000))
+    {
+      isLastCycleTrue = false;
+    }
+  }
+
+  // Serial.println(ratioCardiac);
+
+  // mean calculation
+
+  if (counter >= 5000)
+  {
+
+    for (int i = K; i < counter / 50 - K; i++)
+    {
+      double x[2 * K + 1];
+      for (int j = 0; j <= 2 * K; j++)
+      {
+        x[j] = soundArray[i - K + j];
       }
       double sum = 0.0;
-      for (int j = 0; j <= 2*K; j++) {
-        //Serial.println(x[j]);
-        //Serial.println(x[j]*x[j]);
-        sum += x[j]*x[j];
-
-
+      for (int j = 0; j <= 2 * K; j++)
+      {
+        // Serial.println(x[j]);
+        // Serial.println(x[j]*x[j]);
+        sum += x[j] * x[j];
       }
-  
-  meanSoundArray[i] = sum / (2*K+1);
-  //Serial.println(sum);
-  //Serial.println((2*K+1));
-  }
-avgSound=0;
 
-  for(int i = 0; i<counter/50; i++){
-    avgSound += meanSoundArray[i]/(counter/50);
+      meanSoundArray[i] = sum / (2 * K + 1);
+      // Serial.println(sum);
+      // Serial.println((2*K+1));
+    }
+    avgSound = 0;
 
-  }
+    for (int i = 0; i < counter / 50; i++)
+    {
+      avgSound += meanSoundArray[i] / (counter / 50);
+    }
 
-  mic_last = avgSound*1000;
-    
+    mic_last = avgSound * 1000;
+
     clean_and_display();
-  counter=0;
-  }else{counter++;}
-  
-  
+    counter = 0;
+  }
+  else
+  {
+    counter++;
+  }
 }
