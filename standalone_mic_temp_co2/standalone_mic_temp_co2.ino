@@ -182,26 +182,33 @@ void clean_and_display()
       {
       case 1:
         TYP = "3";
+        sendTrame(temp_last);
         break;
       case 2:
         TYP = "1";
+        sendTrame(ISO_last);
         break;
       case 3:
         TYP = "2";
+        sendTrame(CO2_last);
         break;
       case 4:
         TYP = "5";
+        sendTrame(mic_last*100);
       case 5:
         TYP = "6";
+        sendTrame(cardiac_last);
         break;
+      case default:
+       sendTrame(humi_last);
       }
 
-        sendTrame(69,  "0001");
+       
       
     }
     
 }
-void sendTrame(int value, String TIM) {
+void sendTrame(int value) {
 
  
   // CHK peut être calculé en sommant les valeurs ASCII de tous les caractères de la trame.
@@ -223,7 +230,7 @@ void sendTrame(int value, String TIM) {
   sprintf(hexValue, "%04X", value);
 
     // Construction de la trame
-  String trame = TRA + OBJ + REQ + TYP + NUM + hexValue + TIM + "00";
+  String trame = TRA + OBJ + REQ + TYP + NUM + hexValue + hexMinutes + hexSecondes + "00";
  
   // Envoi de la trame et attente de la réponse de la passerelle
   Serial1.println(trame);  // envoie la trame
