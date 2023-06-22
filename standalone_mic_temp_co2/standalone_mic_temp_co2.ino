@@ -77,7 +77,7 @@ float cardiac_last;
 String TRA = "1";
 String OBJ = "6969";
 String REQ = "1";
-String NUM = "1";
+String NUM = "01";
 String TYP ;
 String VAL ;
 String CHK = "00" ;
@@ -177,30 +177,32 @@ void clean_and_display()
 
     for (int i = 0; i <= 5; i++)
     {
-      TYP = "4";
+      
       switch (i)
       {
       case 1:
         TYP = "3";
-        sendTrame(temp_last);
+        sendTrame( (int) temp_last);
         break;
       case 2:
         TYP = "1";
-        sendTrame(ISO_last);
+        sendTrame( (int) ISO_last);
         break;
       case 3:
         TYP = "2";
-        sendTrame(CO2_last);
+        sendTrame( (int) CO2_last);
         break;
       case 4:
         TYP = "5";
-        sendTrame(mic_last*100);
+        sendTrame( (int) mic_last*100);
       case 5:
         TYP = "6";
-        sendTrame(cardiac_last);
+        sendTrame( (int) cardiac_last);
         break;
-      case default:
-       sendTrame(humi_last);
+      case 0:
+        TYP = "4";
+       sendTrame( (int) humi_last);
+       break;
       }
 
        
@@ -209,33 +211,41 @@ void clean_and_display()
     
 }
 void sendTrame(int value) {
-
- 
   // CHK peut être calculé en sommant les valeurs ASCII de tous les caractères de la trame.
-  int chkSum = 0;
+
+
+
+  int minutes = millis() / 60000 ;
+  int secondes = millis() % 60000 / 1000;
+  char hexValue[3]; // 2 characters for the hexadecimal representation and 1 for the null terminator
+  char hexMinutes[3];
+  char hexSecondes[3];
+  sprintf(hexMinutes, "%02X", minutes);
+  sprintf(hexSecondes, "%02X", secondes);
+  if(value<0){
+    value = 0;
+  }
+  sprintf(hexValue, "%02X", value);
+  if(TYP == "2"){
+    
+  }
+  // Construction de la trame
+  trame = TRA + OBJ + REQ + TYP + NUM + hexValue + hexMinutes + hexSecondes;
+    int chkSum = 0;
   for (int i = 0; i < trame.length(); i++) {
     chkSum += trame[i];
   }
-  //CHK = String(chkSum, HEX);  // convertit la somme en une chaîne hexadécimale
-  CHK = "00";
+    if (CHK.length() < 2) {
+    CHK = "0" + CHK;  // Add a leading zero if needed
+  }
+  CHK = String(chkSum, HEX);  // convertit la somme en une chaîne hexadécimale
   trame += CHK;
 
-  int minutes = millis() / 60000 ; 
-  int secondes = millis() % 60000 / 1000;
-    char hexValue[5]; // 2 characters for the hexadecimal representation and 1 for the null terminator
-  char hexMinutes[3];
-  char hexSecondes[3];
-    sprintf(hexMinutes, "%02X", minutes);
-  sprintf(hexSecondes, "%02X", secondes);
-  sprintf(hexValue, "%04X", value);
-
-    // Construction de la trame
-  String trame = TRA + OBJ + REQ + TYP + NUM + hexValue + hexMinutes + hexSecondes + "00";
- 
   // Envoi de la trame et attente de la réponse de la passerelle
   Serial1.println(trame);  // envoie la trame
   Serial.println(trame);
 }
+
 
 void loop()
 {
