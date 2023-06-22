@@ -227,7 +227,8 @@ void sendTrame(int value) {
   }
   sprintf(hexValue, "%02X", value);
   if(TYP == "2"){
-    
+    Serial.println(value);
+    Serial.println(hexValue);
   }
   // Construction de la trame
   trame = TRA + OBJ + REQ + TYP + NUM + hexValue + hexMinutes + hexSecondes;
@@ -235,9 +236,7 @@ void sendTrame(int value) {
   for (int i = 0; i < trame.length(); i++) {
     chkSum += trame[i];
   }
-    if (CHK.length() < 2) {
-    CHK = "0" + CHK;  // Add a leading zero if needed
-  }
+
   CHK = String(chkSum, HEX);  // convertit la somme en une chaîne hexadécimale
   trame += CHK;
 
